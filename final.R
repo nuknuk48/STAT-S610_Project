@@ -34,7 +34,6 @@ Data_generator_helper <- function(qlist, susc, index){
 }
 
 Data_generator <- function(qlist, susc1, susc2) {
-  
   w1 <- Data_generator_helper(qlist, susc1, 2)
   w2 <- Data_generator_helper(qlist, susc2, 4)
 
@@ -60,7 +59,6 @@ ABC <- function(epsilon, n_samples, data1, data2) {
     qlist <- runif(4) #qc1 qh1 qc2 qh2
     data <- Data_generator(qlist,ncol(data1),ncol(data2))
     distance <- Distance(data1, data2, data)
-    #print(distance)
     if(distance <= epsilon){
       parameters[[i]] <- qlist
       i = i +1
@@ -69,8 +67,8 @@ ABC <- function(epsilon, n_samples, data1, data2) {
   return(parameters)
 }
 
-m1 <- ABC(0.5, 100000, H3N2_78, H3N2_81)
-m2 <- ABC(0.5, 100000, B_76, H1N1_79)
+m1 <- ABC(1.0, 1000, H3N2_78, H3N2_81)
+m2 <- ABC(1.0, 1000, B_76, H1N1_79)
 
 m1 <- as.data.frame(m1)
 m1 <- t(m1)
