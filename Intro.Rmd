@@ -1,0 +1,28 @@
+### Backgrounds
+
+In biological sciences, for many complex problems (e.g. population genetics, ecology and systems biology), it's hard to achieve closed forms of models. Under these circumstances, computer simulations have become a popular method to resolve these problems. In our project, epidemiologists have developed models for disease spread using the real data, which is describing influenza A (H3N2 & H1N1) and influenza B outbreaks in different years and locations. However, the evaluation of the likelihood is computationally intractable and suitable probability models do not exist. The researchers have to find a way to overcome these problems. One commonly used strategy for fitting parameters in models is approximate Bayesian computation (ABC), which is a simulation-based method.
+
+### Introduction
+
+In Approximate Bayesian Computation, given a prior distribution $P(\theta)$ of parameter $\theta$ and the likelihood function $f(D_0|\theta)$, the goal is to approximate the posterior distribution, $P(\theta|D_0)\propto f(D_0|\theta)*P(\theta)$. The general steps are the following:
+
+(1) Sample the parameter $\theta^*$ from prior distribution
+(2) Simulate the dataset $D^*$ using distribution $f(D^*|\theta^*)$
+(3) Compared the simulated dataset $D^*$ with the observed dataset $D_0$ using the distance function $d$ and tolerance $\epsilon$ to accept or discard the parameter $\theta^*$
+(4) Run this process multiple times to get a posterior distribution for parameter $\theta^*$ 
+
+### Project Goals
+
+In our project, our goal is to address whether:
+
+- Different outbreaks of the same strain can be described by the same model of disease spread
+- Outbreaks of different molecular strains of the influenza virus can be described by the same model of disease spread 
+- Reproduce the Figures 3a and 3c from Tony and Stumpf's paper 
+
+### Methodology
+
+We are tring to generate the posterior distribution for parameters $q_c^*$ and $q_h^*$, where $q_c^*$ is the probability that a susceptible individual does not get infected from the community, and $q_h^*$ is the probability that a susceptible individual does not get infected within the household. And the ABC function involves the following elements:
+
+- Choose uniform prior distributions for all parameters and model selections
+- Use the equations in Page 107 as criteria to simulate datasets
+- Use the Frobenious norm to build up the distance function
