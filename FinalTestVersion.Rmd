@@ -1,0 +1,138 @@
+---
+title: "**Tests for Approximate Bayesian Computation for Disease Outbreaks**"
+author: "Sohum Mehrotra, Zhongwei Peng, Aining Wang"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Initialize data and libraries
+set.seed(123)
+library(matrixcalc)
+H3N2_78<- matrix(data = c(66, 87, 25, 22, 4, 13, 14, 15,
+                          9, 4, 0, 4, 4, 9, 1, 0, 0, 4, 3, 1,
+                          0, 0, 0, 1, 1,
+                          0,0,0,0,0), ncol = 5, byrow = TRUE)
+
+H3N2_81<- matrix(data = c(44, 10, 0, 0, 0,0,
+                          62, 13,9, 0,0,0,
+                          47,8,2,3,0,0,
+                          38,11,7,5,1,0,
+                          9,5,3,1,0,1), ncol = 5)
+```
+
+
+
+```{r}
+#Testing the data_generator_helper function output
+Data_generator_helper <- function(qlist, susc, index, data){
+  w <- matrix(0, nrow = 6, ncol = susc)
+  w[1,] <- sapply(1:susc, function(n,theta){theta^n}, qlist[index]) 
+  #populating 1st row w0s: w01,w02,w03,w04,w05
+  w[2,1] <- 1 - w[1,1] #populating w11
+  
+  #produces w probability matrix
+  for(s in 2:susc){ #populating rows
+     for(j in 2:6){
+       if(j<=s){
+         w[j,s] <- choose(s,j-1)*w[j,j-1]*(qlist[index] * (qlist[index-1]^(j-1)))^(s-j+1)
+       }
+       else{
+         w[j,s] <- 1-sum(w[,s])
+         break
+       }
+     }
+  }
+  
+  #size needs to be the sum of the column of the OG data
+  
+  initSize <- colSums(data)[1]
+  countMatrix <- rmultinom(prob=w[,1],size=initSize,n=1)
+  for(col in 2:susc){
+    nextSize <- colSums(data)[col]
+    countCol <- rmultinom(prob=w[,col],size=nextSize,n=1)
+    countMatrix <- cbind(countMatrix, countCol)
+  }
+  
+  return(countMatrix)
+}
+
+#generate some test data
+generated <- Data_generator_helper(runif(4),5,2,H3N2_78)
+
+#checking type and sizes
+class(generated) == c("matrix", "array")
+dim(generated) == c(6,5)
+
+#checking if the zeros are in the correct places
+generated[3,1] == 0
+generated[4,1] == 0
+generated[5,1] == 0
+generated[6,1] == 0
+
+generated[4,2] == 0
+generated[5,2] == 0
+generated[6,2] == 0
+
+generated[5,3] == 0
+generated[6,3] == 0
+
+generated[6,4] == 0
+```
+
+```{r}
+#Testing the data_generator function output
+Data_generator <- function(qlist, susc1, susc2, data1, data2) {
+  
+  c1 <- Data_generator_helper(qlist, susc1, 2, data1)
+  c2 <- Data_generator_helper(qlist, susc2, 4, data2)
+
+  return(list("c1" = c1, "c2" = c2))
+}
+
+data_generated <- Data_generator(runif(4), 5, 5, H3N2_78, H3N2_81)
+
+class(data_generated) == "list"
+dim(data_generated$c1) == c(6,5)
+dim(data_generated$c2) == c(6,5)
+```
+
+```{r}
+#Testing the output of the distance function
+library(matrixcalc)
+Distance <- function(data1, data2, generated_data) {
+  return((1/2) * (frobenius.norm(data1 - generated_data$c1) + 
+                    frobenius.norm(data2 - generated_data$c2)))
+}
+
+dist <- Distance(H3N2_78,H3N2_81,data_generated)
+
+class(dist) == "numeric"
+```
+
+```{r}
+#Testing the ouptut of the ABC function
+ABC <- function(epsilon, n_samples, data1, data2) {
+  parameters <- list()
+  i <- 1
+  for(j in 1 : n_samples) {
+    qlist <- runif(4) #qc1 qh1 qc2 qh2
+    data <- Data_generator(qlist,ncol(data1),ncol(data2),data1, data2)
+    distance <- Distance(data1, data2, data)
+    if(distance <= epsilon){
+      parameters[[i]] <- qlist
+      i = i + 1
+    }
+  }
+  return(parameters)
+}
+
+m1 <- ABC(50, 10000, H3N2_78, H3N2_81)
+
+class(m1) == "list"
+```
